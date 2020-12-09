@@ -1,0 +1,72 @@
+{
+  "animation": [
+    {
+      "name": "Move",
+      "isLoop": true,
+      "frameInfo": [
+        {
+          "frameName": "bug1_1.png",
+          "duration": 0.3
+        },
+        {
+          "frameName": "bug1_2.png",
+          "duration": 0.3
+        },
+        {
+          "frameName": "bug1_3.png",
+          "duration": 0.3
+        },
+        {
+          "frameName": "bug1_4.png",
+          "duration": 0.3
+        }
+      ]
+    },
+    {
+      "name": "Die",
+      "isLoop": false,
+      "frameInfo": [
+        {
+          "frameName": "die01.png",
+          "duration": 0.2
+        },
+        {
+          "frameName": "die02.png",
+          "duration": 0.2
+        },
+        {
+          "frameName": "die03.png",
+          "duration": 0.2
+        },
+        {
+          "frameName": "die04.png",
+          "duration": 0.2
+        },
+        {
+          "frameName": "die05.png",
+          "duration": 0.2
+        },
+        {
+          "frameName": "die06.png",
+          "duration": 0.2
+        },
+        {
+          "frameName": "die07.png",
+          "duration": 0.2
+        },
+        {
+          "frameName": "die08.png",
+          "duration": 0.2
+        },
+        {
+          "frameName": "die09.png",
+          "duration": 0.2
+        },
+        {
+          "frameName": "die10.png",
+          "duration": 0.2
+        }
+      ]
+    }
+  ]
+}
