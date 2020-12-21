@@ -22,8 +22,8 @@ namespace ServerCore
 		// .Value로 값을 대입하면 해당 값은 TLS에 저장된다. (또는 아래의 생성자 사용)
 		static ThreadLocal<string> ThreadName1 = new ThreadLocal<string>();
 
-		// 생성자를 이용하여 string을 받으면, 해당 스레드에서 'ThreadName2'를 생성할 때 값을 넣어주고, 이미 생성되어 있다면 그대로 사용한다.
-		// 이후 ThreadName2에 매번 값을 대입하지 않아도 되므로 작업량을 줄일 수 있다.
+		// 생성자를 이용하여 string을 받으면, 해당 스레드에서 'ThreadName2'를 생성할 때 값을 넣어준다.
+		// IsValueCreated로 이 스레드의 TLS값 유뮤룰 체크해서, 이미 생성되어 있다면 매번 값을 대입하는 과정을 생략할 수 있으므로 작업량을 줄일 수 있다.
 		static ThreadLocal<string> ThreadName2 = new ThreadLocal<string>(() => $"[TLS] My Name is {Thread.CurrentThread.ManagedThreadId}");
 		static string sThreadName;
 
