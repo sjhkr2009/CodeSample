@@ -10,17 +10,14 @@ namespace PacketGenerator
 		static string packetEnums;
 		static ushort packetId;
 
-		// 앱이 빌드되는 경로는 프로젝트(PacketGenerator) 속성 - 빌드의 '출력 경로'에서 지정할 수 있다. (모든 구성에 대해 지정할 것)
-
-		// 별도의 폴더를 만들지 않고 경로에 exe파일을 포함한 빌드된 파일들을 직접 저장하려면,
-		// 프로젝트 파일(.csproj)을 열고 <PropertyGroup> 산하에
-		// <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath> 을 추가하면 된다.
-		// (XML 파일 등 파일 입출력 경로도 해당 위치를 기준으로 지정)
+		// 패킷의 많은 비율이 클라에서만 또는 서버에서만 수신될 패킷이다.
+		// 따라서 클라/서버용 패킷 매니저를 따로 만들어 올바른 종류의 패킷만 처리하게 한다.
+		// 패킷의 용도는 XML 파일의 패킷 이름에 C_ 또는 S_ 를 붙여 구분한다.
+		static string serverRegister;
+		static string clientRegister;
 
 		static void Main(string[] args)
 		{
-			// XML 파일이 있는 경로가 들어갈 변수. 매개변수로 넘어온 경로를 받을 것이다.
-			// 기본은 상위 폴더의 PDL.xml (./filename.xml 은 현재 폴더, 앞에 점을 붙일 때마다 한 단계 상위 폴더)
 			string pdlPath = "../PDL.xml";
 
 			XmlReaderSettings settings = new XmlReaderSettings()
@@ -29,7 +26,6 @@ namespace PacketGenerator
 				IgnoreWhitespace = true
 			};
 
-			// 넘어온 인자가 있다면, XML파일 경로를 첫 번째 인자로 지정한다.
 			if (args.Length >= 1)
 				pdlPath = args[0];
 
@@ -45,6 +41,12 @@ namespace PacketGenerator
 				
 				string fileText = string.Format(PacketFormat.fileFormat, packetEnums, genPackets);
 				File.WriteAllText("GenPackets.cs", fileText);
+
+				// 클라/서버용 패킷 매니저도 생성해준다. 내용은 파싱하는 부분에서 작성.
+				string clientManagerText = string.Format(PacketFormat.managerFormat, clientRegister);
+				File.WriteAllText("ClientPacketManager.cs", clientManagerText);
+				string serverManagerText = string.Format(PacketFormat.managerFormat, serverRegister);
+				File.WriteAllText("ServerPacketManager.cs", serverManagerText);
 			}
 
 		}
@@ -70,8 +72,15 @@ namespace PacketGenerator
 
 			Tuple<string, string, string> t = ParseMembers(xml);
 			genPackets += string.Format(PacketFormat.packetFormat, packetName, t.Item1, t.Item2, t.Item3);
-
 			packetEnums += string.Format(PacketFormat.packetEnumFormat, packetName, ++packetId) + Environment.NewLine + "\t";
+
+			// 패킷 이름으로 패킷 매니저 클래스 내용을 작성한다.
+			// 타입에 맞는 패킷만 처리하도록 함수를 만든다. 타입은 패킷 이름 앞글자로 구분한다.
+			// 포맷 자체에 들여쓰기를 했으므로 여기선 줄바꿈만 해준다. PacketFormat 참고.
+			if (packetName.StartsWith("S_") || packetName.StartsWith("s_"))
+				clientRegister += string.Format(PacketFormat.managerRegisterFormat, packetName) + Environment.NewLine;
+			else
+				serverRegister += string.Format(PacketFormat.managerRegisterFormat, packetName) + Environment.NewLine;
 		}
 
 		// ParsePacket에서 호출된다. 현재 읽은 지점의 모든 내부 멤버를 파싱하여 멤버 변수명, 직렬화, 역직렬화 포맷으로 반환한다.

@@ -32,8 +32,8 @@ public enum PacketID
 		/* 
 		 * {0} : 패킷 이름
 		 * {1} : 멤버 변수들
-		 * {2} : 멤버 변수 쓰기(Serialize)
-		 * {3} : 멤버 변수 읽기(De-Serialize)
+		 * {2} : 멤버 변수 읽기(De-Serialize)
+		 * {3} : 멤버 변수 쓰기(Serialize)
 		*/
 		public static string packetFormat =
 @"
@@ -53,7 +53,7 @@ class {0}
 		success &= BitConverter.TryWriteBytes(span.Slice(count, span.Length - count), (ushort)PacketID.{0});
 		count += sizeof(ushort);
 		
-		{2}
+		{3}
 
 		success &= BitConverter.TryWriteBytes(span, count);
 
@@ -70,7 +70,7 @@ class {0}
 
 		ReadOnlySpan<byte> span = new ReadOnlySpan<byte>(arr.Array, arr.Offset, arr.Count);
 
-		{3}
+		{2}
 	}}
 }}
 ";
@@ -82,8 +82,8 @@ class {0}
 		// {0} : 리스트 멤버 이름 (파스칼 표기)
 		// {1} : 리스트 멤버 이름 (카멜 표기)
 		// {2} : 구조체 멤버 변수들
-		// {3} : 구조체 멤버 변수 쓰기(Serialize)
-		// {4} : 구조체 멤버 변수 읽기(De-Serialize)
+		// {3} : 구조체 멤버 변수 읽기(De-Serialize)
+		// {4} : 구조체 멤버 변수 쓰기(Serialize)
 		public static string memberListFormat =
 @"public struct {0}
 {{
@@ -93,17 +93,17 @@ class {0}
 	{{
 		bool success = true;
 
-		{3}
+		{4}
 
 		return success;
 	}}
 
 	public void DeSerialize(ReadOnlySpan<byte> span, ref ushort count)
 	{{
-		{4}
+		{3}
 	}}
 }}
-public List<{0}> {1} = new List<{0}>();";
+public List<{0}> {1}s = new List<{0}>();";
 
 #region Read (De-Serialize)
 

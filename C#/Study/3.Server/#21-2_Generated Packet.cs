@@ -6,14 +6,23 @@ using ServerCore;
 
 public enum PacketID 
 {
-	PlayerInfoReq = 1,
-	Test = 2,
+	C_PlayerInfoReq = 1,
+	S_Test = 2,
 	
 }
 
-
-class PlayerInfoReq
+interface IPacket
 {
+	ushort Protocol { get; }
+	void DeSerialize(ArraySegment<byte> arr);
+	ArraySegment<byte> Serialize();
+}
+
+
+class C_PlayerInfoReq : IPacket
+{
+	public ushort Protocol => (ushort)PacketID.C_PlayerInfoReq;
+
 	public byte testByte;
 	public long playerId;
 	public string playerName;
@@ -58,7 +67,7 @@ class PlayerInfoReq
 		bool success = true;
 
 		count += sizeof(ushort);
-		success &= BitConverter.TryWriteBytes(span.Slice(count, span.Length - count), (ushort)PacketID.PlayerInfoReq);
+		success &= BitConverter.TryWriteBytes(span.Slice(count, span.Length - count), (ushort)PacketID.C_PlayerInfoReq);
 		count += sizeof(ushort);
 		
 		arr.Array[arr.Offset + count] = (byte)this.testByte;
@@ -109,8 +118,10 @@ class PlayerInfoReq
 	}
 }
 
-class Test
+class S_Test : IPacket
 {
+	public ushort Protocol => (ushort)PacketID.S_Test;
+
 	public int testInt;
 
 	public ArraySegment<byte> Serialize()
@@ -122,7 +133,7 @@ class Test
 		bool success = true;
 
 		count += sizeof(ushort);
-		success &= BitConverter.TryWriteBytes(span.Slice(count, span.Length - count), (ushort)PacketID.Test);
+		success &= BitConverter.TryWriteBytes(span.Slice(count, span.Length - count), (ushort)PacketID.S_Test);
 		count += sizeof(ushort);
 		
 		success &= BitConverter.TryWriteBytes(span.Slice(count, span.Length - count), testInt);
