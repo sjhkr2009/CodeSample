@@ -17,3 +17,8 @@
 17. 계산기 만들기 실습 (Project: Calculator)
 18. 신경쇠약 카드게임 실습 (Project: Concentration)
 19. 다이렉트 2D (Direct 2D)
+20. 벌레 잡기 게임 프로토타입 (Project: BuggyHouse)
+21. 다이렉트3D 튜토리얼 ( http://rastertek.com/tutdx11s2.html 를 참고했습니다 )
+22. 다이렉트3D - Framework, Shader, Texture, Timer, Input
+23. 다이렉트XTK 구현 및 프레임워크 제작
+24. 3-Match류 자작 게임 Spiritpang (Project: SpiritPang)

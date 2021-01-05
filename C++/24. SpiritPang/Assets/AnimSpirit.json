@@ -1,0 +1,116 @@
+{
+  "animations": [
+    {
+      "name": "spirit0",
+      "loop": false,
+      "frames": [
+        {
+          "name": "Spirit01.png",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "name": "spirit1",
+      "loop": false,
+      "frames": [
+        {
+          "name": "Spirit02.png",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "name": "spirit2",
+      "loop": false,
+      "frames": [
+        {
+          "name": "Spirit03.png",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "name": "spirit3",
+      "loop": false,
+      "frames": [
+        {
+          "name": "Spirit04.png",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "name": "spirit4",
+      "loop": false,
+      "frames": [
+        {
+          "name": "Spirit05.png",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "name": "spirit5",
+      "loop": false,
+      "frames": [
+        {
+          "name": "Spirit06.png",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "name": "spirit6",
+      "loop": false,
+      "frames": [
+        {
+          "name": "Spirit07.png",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "name": "spirit100",
+      "loop": false,
+      "frames": [
+        {
+          "name": "bomb1.png",
+          "duration": 0.15
+        },
+        {
+          "name": "bomb2.png",
+          "duration": 0.15
+        },
+        {
+          "name": "bomb3.png",
+          "duration": 0.15
+        },
+        {
+          "name": "bomb4.png",
+          "duration": 0.15
+        },
+        {
+          "name": "bomb5.png",
+          "duration": 0.15
+        },
+        {
+          "name": "bomb6.png",
+          "duration": 0.15
+        },
+        {
+          "name": "bomb7.png",
+          "duration": 0.15
+        },
+        {
+          "name": "bomb8.png",
+          "duration": 0.15
+        },
+        {
+          "name": "bomb9.png",
+          "duration": 0.15
+        }
+      ]
+    }
+  ]
+}

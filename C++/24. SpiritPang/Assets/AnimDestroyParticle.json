@@ -1,0 +1,102 @@
+{
+  "animations": [
+    {
+      "name": "Disappear",
+      "loop": false,
+      "frames": [
+        {
+          "name": "disappear01.png",
+          "duration": 0.1
+        },
+        {
+          "name": "disappear02.png",
+          "duration": 0.1
+        },
+        {
+          "name": "disappear03.png",
+          "duration": 0.1
+        },
+        {
+          "name": "disappear04.png",
+          "duration": 0.1
+        },
+        {
+          "name": "disappear05.png",
+          "duration": 0.1
+        },
+        {
+          "name": "disappear06.png",
+          "duration": 0.1
+        },
+        {
+          "name": "disappear07.png",
+          "duration": 0.1
+        },
+        {
+          "name": "disappear08.png",
+          "duration": 0.1
+        },
+        {
+          "name": "disappear09.png",
+          "duration": 0.1
+        },
+        {
+          "name": "disappear10.png",
+          "duration": 0.1
+        }
+      ]
+    },
+    {
+      "name": "BombAttack",
+      "loop": false,
+      "frames": [
+        {
+          "name": "bomb_attack1.png",
+          "duration": 0.1
+        },
+        {
+          "name": "bomb_attack2.png",
+          "duration": 0.1
+        },
+        {
+          "name": "bomb_attack3.png",
+          "duration": 0.1
+        },
+        {
+          "name": "bomb_attack4.png",
+          "duration": 0.1
+        }
+      ]
+    },
+    {
+      "name": "BombSplash",
+      "loop": false,
+      "frames": [
+        {
+          "name": "bomb_splash1.png",
+          "duration": 0.1
+        },
+        {
+          "name": "bomb_splash2.png",
+          "duration": 0.1
+        },
+        {
+          "name": "bomb_splash3.png",
+          "duration": 0.1
+        },
+        {
+          "name": "bomb_splash4.png",
+          "duration": 0.1
+        },
+        {
+          "name": "bomb_splash5.png",
+          "duration": 0.1
+        },
+        {
+          "name": "bomb_splash6.png",
+          "duration": 0.1
+        }
+      ]
+    }
+  ]
+}
