@@ -98,8 +98,10 @@ void AnimatedActor::Update(double deltaTime)
 			{
 				case AnimatedActor::None:
 					m_paused = true;
+					OnAnimationEnd();
 					break;
 				case AnimatedActor::Disable:
+					OnAnimationEnd();
 					Stop();
 					SetActive(false);
 					return;
@@ -117,5 +119,6 @@ void AnimatedActor::Update(double deltaTime)
 	{
 		m_totalElapsed -= m_timePerFrame;
 		SetFrameIndex(m_frameIndex);
+		KeyFrameAnimation(m_frameIndex);
 	}
 }

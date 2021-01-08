@@ -1,5 +1,6 @@
 #include "PCH.h"
 #include "SpiritFactory.h"
+#include "CountdownText.h"
 #include <random>
 #include <vector>
 #pragma once
@@ -25,14 +26,16 @@ namespace SpiritPang
 
 		enum State
 		{
-			Idle = 0,
-			BlockMoving = 1,
-			DestroyList = 1 << 1,
-			ShuffleWaiting = 1 << 2,
-			SpecialBlockSelected = 1 << 3,
-			CannotInput = 1 << 4,
-			Exploding = CannotInput | (1 << 5),
-			SpawnBomb = 1 << 6
+			Idle =					0,
+			BlockMoving =			1,
+			DestroyList =			1 << 1,
+			ShuffleWaiting =		1 << 2,
+			SpecialBlockSelected =	1 << 3,
+			CannotInput =			1 << 4,
+			Exploding =				CannotInput | (1 << 5),
+			SpawnBomb =				1 << 6,
+			Paused =				1 << 8,
+			Gameover =				1 << 30
 		};
 
 	public:
@@ -69,13 +72,20 @@ namespace SpiritPang
 
 		std::function<void(int)>		m_onBlockDestroy{};
 		std::function<void()>			m_onSwapFailed{};
+		std::function<void(bool)>		m_timerStop{};
 
 	public:
 		void Update(double delta) override;
 
+		void Pause() { m_state |= (State::Paused); OnTimerStop(); }
+		void Resume() { m_state &= ~(State::Paused); OnTimerStop(false); }
+		void GameOver() { m_state |= (State::Gameover); }
+		void Reset();
+
 		void SetSpiritPos(Spirit* spirit, int index) { spirit->m_index = index, spirit->SetPosition(GetSpiritPosX(index), GetSpiritPosY(index)); }
 		void SetEventOnBlockDestroy(std::function<void(int)> evt) { m_onBlockDestroy = evt; }
 		void SetEventOnSwapFailed(std::function<void()> evt) { m_onSwapFailed = evt; }
+		void SetEventOnTimerStop(std::function<void(bool)> evt) { m_timerStop = evt; }
 
 		int GetState() const { return m_state; }
 		void BombSpawn() { m_state |= State::SpawnBomb; }
@@ -109,8 +119,9 @@ namespace SpiritPang
 		bool ChangeTypeToCanPlay(int index);
 		void ShuffleBoard(bool moveLerp = true);
 
-		void OnBlockDestory(int count) { m_onBlockDestroy(count); }
-		void OnSwapFailed() { m_onSwapFailed(); }
+		void OnBlockDestory(int count) { if(m_onBlockDestroy) m_onBlockDestroy(count); }
+		void OnSwapFailed() { if(m_onSwapFailed) m_onSwapFailed(); }
+		void OnTimerStop(bool isStop = true) { if (m_timerStop) m_timerStop(isStop); }
 
 		void OnSpecialBlockSelected(float x, float y);
 		void OnBombClicked(int index);

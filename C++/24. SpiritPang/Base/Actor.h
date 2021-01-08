@@ -48,7 +48,7 @@ namespace DX
 		virtual void OnDeviceLost() override;
 		virtual void OnDeviceRestored() override;
 
-		virtual void Update(double delta) { if (!m_isActive) return; };
+		virtual void Update(double delta) {};
 		virtual void Render(DirectX::SpriteBatch* batch);
 
 	protected:

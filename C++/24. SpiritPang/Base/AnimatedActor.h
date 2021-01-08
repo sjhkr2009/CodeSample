@@ -29,12 +29,20 @@ namespace DX
 		void SetAnimation(const LPCWSTR animName);
 		void SetOnEnd(OnEnd action) { m_onEnd = action; }
 
-		virtual void Play() { SetActive(true), Reset(); m_paused = false; }
+		virtual void Play() { SetActive(true), Reset(); m_paused = false; KeyFrameAnimation(m_frameIndex); }
 		void Pause() { m_paused = true; }
+		void Resume() { m_paused = false; }
 		void Reset() { m_frameIndex = 0; m_totalElapsed = 0.f; }
 		void Stop() { Pause(), Reset(); }
 
 		bool IsPaused() { return m_paused; }
+
+	protected:
+		virtual void KeyFrameAnimation(int nowIndex) {};
+		virtual void OnAnimationEnd() {};
+
+		int		m_totalFrameCount;
+		int		m_frameIndex;
 
 	private:
 		void SetFrameIndex(int index);
@@ -45,11 +53,8 @@ namespace DX
 		OnEnd	m_onEnd;
 
 		bool	m_paused;
-		//bool	m_isLoop;
 		float	m_totalElapsed;
 		float	m_timePerFrame;
-		int		m_frameIndex;
-		int		m_totalFrameCount;
 	};
 #pragma warning(pop)
 }

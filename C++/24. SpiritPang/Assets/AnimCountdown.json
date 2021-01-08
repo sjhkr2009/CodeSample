@@ -1,0 +1,70 @@
+{
+  "animations": [
+    {
+      "name": "number3",
+      "loop": false,
+      "frames": [
+        {
+          "name": "number3.png",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "name": "number2",
+      "loop": false,
+      "frames": [
+        {
+          "name": "number3.png",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "name": "number1",
+      "loop": false,
+      "frames": [
+        {
+          "name": "number3.png",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "name": "start",
+      "loop": false,
+      "frames": [
+        {
+          "name": "start.png",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "name": "countdown",
+      "loop": false,
+      "frames": [
+        {
+          "name": "null.png",
+          "duration": 0.1
+        },
+        {
+          "name": "number3.png",
+          "duration": 0.8
+        },
+        {
+          "name": "number2.png",
+          "duration": 0.8
+        },
+        {
+          "name": "number1.png",
+          "duration": 0.8
+        },
+        {
+          "name": "start.png",
+          "duration": 0.5
+        }
+      ]
+    }
+  ]
+}
