@@ -1,0 +1,32 @@
+USE BaseballData
+
+-- 숫자와 문자열 연산
+
+SELECT 2021 - birthYear AS koreanAge
+-- 현재 년도 - 태어난 해를 나이로 가정하고 koreanAge 라는 행을 만들어 출력한다.
+FROM players
+WHERE (deathYear IS NULL) AND (birthYear IS NOT NULL) AND (2021 - birthYear) <= 80
+-- (koreanAge <= 80) 와 같은 조건은 에러가 난다. 실행 순서상 FROM - WHERE - SELECT - ORDERBY 이므로, SELECT에서 정의한 koreanAge를 WHERE에서 사용할 수는 없다.
+ORDER BY koreanAge
+
+-- 참고로 NULL을 연산하면 그 결과도 NULL로 나온다.
+SELECT 2021 + NULL
+
+-- 정수끼리의 나눗셈 연산은 다른 프로그래밍 언어와 마찬가지로 몫만 출력한다.
+SELECT 3 / 2
+-- 다만 3.0 / 2 와 같이 입력하면 소수까지 연산하여 1.500000 과 같이 출력된다.
+
+-- 그 외에 ROUND, POWER, COS 등 여러 가지 수학 연산 명령도 사용할 수 있다. 종류는 MSDN 문서 참고.
+SELECT ROUND(3.141519, 3)	-- 3.141519에서 소수전 셋째 자리까지만 출력한다. 그 이하는 반올림하여 3.142가 출력된다.
+
+-- 문자열은 따옴표를 통해 나타내며, 유니코드 사용 시 N을 붙인다.
+SELECT 'Hello,' + ' world!'
+SELECT N'안녕!'
+
+-- 문자열의 인덱스는 다른 프로그래밍 언어와 달리 0이 아닌 1부터 시작함에 유의.
+SELECT SUBSTRING('20210130', 1, 4)
+
+-- 선수의 성 + 이름을 풀네임으로 출력하기
+SELECT nameFirst + ' ' + nameLast AS fullName
+FROM players
+WHERE nameFirst IS NOT NULL AND nameLast IS NOT NULL

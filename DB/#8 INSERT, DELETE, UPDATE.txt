@@ -1,0 +1,45 @@
+USE BaseballData
+
+-- INSERT / DELETE / UPDATE (추가, 삭제, 수정)
+
+-- (변경 전 데이터를 보기 위한 기존 자료 삭제)
+delete from salaries where yearID >= 2020;
+
+-- 테스트할 연봉 정보를 최신순으로 불러온다. (현재 2012년이 최신)
+SELECT TOP(10) *
+FROM salaries
+ORDER BY yearID DESC;
+
+-- INSERT INTO [테이블명] VALUES (새로운 행의 값들): 지정한 값을 가진 새로운 행을 테이블에 추가한다.
+INSERT INTO salaries
+VALUES (2021, 'KIA', 'KR', 'sunbin01', 450000);
+-- 괄호 안에는 테이블이 요구하는 데이터가 모두 들어가야 하며, 빼먹으면 에러가 발생한다.
+
+-- INSERT INTO에서 들어갈 값을 직접 지정할 수 있다. 입력 순서를 변경할 수 있다.
+-- 일부 값이 없어도 동작하며 기본값으로 채워진다. 단 기본값이 없는 요소는 반드시 값을 입력해야 한다.
+INSERT INTO salaries(teamID, yearID, lgID, playerID)	-- 팀명과 연도의 순서를 바꾸고 연봉(salary) 정보를 뺀다.
+VALUES ('KIA', 2021, 'KR', 'sunbin02')
+
+-- Object Explorer에서 BaseballData - Tables - dbo.salaries를 우클릭, Design을 눌러 확인해보면
+-- yearID, teamID, lgID, playerID 왼쪽에 작은 열쇠 모양이 있다. 이 4개의 정보를 Key로 사용한다는 의미.
+-- 즉 4개 모두 정확히 일치하는 정보는 중복하여 추가할 수 없다. 여기선 구분을 위해 playerID를 바꿔주도록 한다.
+INSERT INTO salaries
+VALUES (2021, 'KIA', 'KR', 'sunbin03', 450000)
+
+-- DELETE FROM [테이블명] WHERE [조건] 으로 조건에 맞는 대상을 삭제할 수 있다. 특정 행을 삭제하고 싶으면 Key값을 이용한다.
+-- WHERE을 입력하지 않아도 동작하지만, 이 경우 테이블의 모든 데이터가 날아가니 주의!
+DELETE FROM salaries
+WHERE playerID = 'sunbin03'
+
+-- UPDATE [테이블명] SET [열 = 값, ...] WHERE [조건] 으로 해당되는 조건의 행을 찾아 지정한 열의 값을 수정할 수 있다.
+UPDATE salaries
+SET salary = 900000, yearID = 2022
+WHERE playerID = 'sunbin02'
+-- 게임에서는 삭제된 데이터를 복구해야 하는 경우도 있기 때문에, 삭제 시 UPDATE에서 삭제 플래그만 켜 주는 경우가 많다.
+-- (DELETE는 물리적 삭제, UPDATE로 삭제처리 하는 건 논리적 삭제)
+
+
+-- 추가/수정/삭제 후의 데이터 확인용
+SELECT TOP(10) *
+FROM salaries
+ORDER BY yearID DESC;

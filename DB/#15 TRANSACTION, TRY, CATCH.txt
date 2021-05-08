@@ -1,0 +1,53 @@
+USE GameDB;
+
+-- Transaction
+-- All or Nothing. 여러 개의 작업이 함께 수행되어야 할 경우 사용한다. 실패할 경우 하나도 수행되어서는 안 된다.
+-- ex) 유저 A가 B에게 아이템을 주는 행위는, 'A의 인벤토리에서 아이템 제거'와 'B의 인벤토리에 아이템 추가' 중 일부만 일어나서는 안 된다.
+
+-- 참고) ID(int), Name(str), Coins(int), 시간(dateTime) 열을 가진 accounts 테이블이 있다고 가정한다.
+--		 테이블을 생성하고 ID를 PRIMARY KEY로 지정한다.
+create table accounts(
+	accountID integer NOT NULL,
+	accountName varchar(10) NOT NULL,
+	coins int default 0,
+	createTime datetime
+);
+alter table accounts
+add constraint PK_Account primary key (accountId);
+---------------------------------------------------------------------
+
+-- 테이블에 값을 추가하는 동작을 한다고 가정한다.
+INSERT INTO accounts VALUES (1, 'jiho01', 100, GETUTCDATE());
+
+-- BEGIN TRAN을 선언한 시점부터의 동작은 트랜잭션으로 취급된다.
+-- ROLLBACK 또는 COMMIT으로 종료되는데, ROLLBACK은 트랜잭션의 동작을 모두 동작 전으로 되돌린다.
+BEGIN TRAN;
+INSERT INTO accounts VALUES (2, 'jiho02', 200, GETUTCDATE());
+ROLLBACK;
+
+-- COMMIT은 트랜잭션의 내용을 모두 적용시킨다.
+-- 위의 2라는 ID는 롤백했으니 추가되지 않고, 아래의 3이라는 아이디는 추가되어 있을 것이다.
+BEGIN TRAN;
+INSERT INTO accounts VALUES (3, 'jiho03', 300, GETUTCDATE());
+COMMIT;
+
+-- TRY ~ CATCH 구문과 연동하여 안전한 트랜잭션 처리가 가능하다.
+-- BEGIN TRY ~ END TRY 사이에서 에러가 발생하면, BEGIN CATCH ~ END CATCH 사이의 동작으로 넘어간다.
+BEGIN TRY
+	BEGIN TRAN;
+	INSERT INTO accounts VALUES(4, 'jiho04', 400, GETUTCDATE());
+	INSERT INTO accounts VALUES(4, 'jiho04', 500, GETUTCDATE()); -- PRIMARY KEY를 중복 추가하려 했으므로 에러가 뜰 것이다.
+	COMMIT;
+END TRY
+
+BEGIN CATCH
+	IF @@TRANCOUNT > 0	-- @@TRANCOUNT: 현재 작동중인 트랜잭션 수를 반환한다.
+	ROLLBACK
+	PRINT('롤백되었습니다.')
+END CATCH
+
+--확인 및 테이블 삭제용
+select * from accounts; 
+delete accounts;
+drop table accounts;
+-----------------------

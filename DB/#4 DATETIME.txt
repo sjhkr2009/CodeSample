@@ -1,0 +1,47 @@
+-- 날짜 관리 (DATETIME)
+
+-- 참고: Table에서 우클릭 - [New] - [Table]로 데이터베이스를 하나 생성하여 연습한다.
+-- 이 데이터베이스엔 DATETIME을 기록하는 하나의 행만 둔다.
+
+-- 날짜 관련 타입들
+-- DATE: 연/월/일
+-- TIME: 시/분/초
+-- DATETIME: 연/월/일/시/분/초
+
+SELECT *
+FROM dbo.DateTimeTest
+
+-- DATETIME은 날짜 포맷을 문자열로 입력한 후, CAST를 통해 DATETIME 타입으로 변환한다.
+-- DATETIME 포맷은 크게 2가지가 있다. (일부만 입력 가능)
+-- YYYYMMDD hh:mm:ss.nnn
+-- YYYY-MM-DDThh:mm
+SELECT CAST('20210201 08:03' AS DATETIME)
+SELECT CAST('20210201 08:3:4.52' AS DATETIME)
+SELECT CAST('2021-02-01 12:23' AS DATETIME)
+
+-- 현재시간을 가져오려면 GETDATE() 또는 CURRENT_TIMESTAMP를 사용한다.
+SELECT GETDATE()			-- TSQL에서만 사용가능
+SELECT CURRENT_TIMESTAMP
+
+-- 다만 GetDate는 현재 컴퓨터 시간을 기준으로 값을 가져오므로, 기기에 따라 시차가 발생할 수 있다.
+-- 실제 서버에서 시간을 사용할 때는 UTC 타임을 이용한다. 그리니치 천문대 기준의 세계 표준시(GMT 0)를 불러온다.
+SELECT GETUTCDATE();
+
+-- 현재시간을 데이터에 추가하려면 다음과 같이 작성한다.
+-- 이 포맷은 특정 테이블을 우클릭한 후 [Script Table as] - [INSERT To] - 새 쿼리 편집기 창을 열어서 불러올 수 있다.
+INSERT INTO [BaseballData].[dbo].[DateTimeTest]
+           ([time])
+     VALUES
+           (CURRENT_TIMESTAMP)	-- 여기에 입력할 데이터를 넣는다. '20210201'과 같이 문자열만 넣어도 암시적 형변환이 일어난다.
+GO
+
+-- 날짜를 더하거나 뺄 때는 DATEADD(단위, 더할 값, 기준값)를 사용한다.
+SELECT DATEADD(DAY, 3, '20210201')
+SELECT DATEADD(SECOND, -523623, CURRENT_TIMESTAMP)	-- 뺄 때는 마이너스 값 입력
+
+-- 날짜 차이를 계산할 때는 DATEDIFF(단위, Before, After) 를 입력한다. After-Before의 값이 지정한 단위로 출력된다.
+SELECT DATEDIFF(SECOND, CURRENT_TIMESTAMP,'20210204')
+
+-- 날짜에서 원하는 요소만(년도만, 시간만 등) 추출할 때는 'DATEPART(단위, DATETIME)' 또는 '단위(DATETIME)' 형태로 사용한다.
+SELECT DATEPART(YEAR, CURRENT_TIMESTAMP)
+SELECT MONTH(CURRENT_TIMESTAMP)

@@ -1,0 +1,60 @@
+-- JOIN: 정보들을 결합하는 것
+-- Index와 함께 매우 중요한 개념
+
+-- (1,2,3)을 가진 테이블 'testA'와 (A,B,C)를 가진 테이블 'testB' 가 있다고 가정한다.
+---------------------------------------------------------------------------------
+-- 만약 GameDB 스키마가 없다면, Create Database GameDB;
+
+USE GameDB;
+
+CREATE TABLE testA
+(
+	a INTEGER
+)
+CREATE TABLE testB
+(
+	b VARCHAR(10)
+)
+-- 테이블 1: (1,2,3)
+INSERT INTO testA VALUES(1);
+INSERT INTO testA VALUES(2);
+INSERT INTO testA VALUES(3);
+-- 테이블 2: (A,B,C)
+INSERT INTO testB VALUES('A');
+INSERT INTO testB VALUES('B');
+INSERT INTO testB VALUES('C');
+---------------------------------------------------------------------------------
+
+-- CROSS JOIN (대상 테이블명): 선택된 테이블과 대상 테이블을 결합한 테이블을 출력한다. 모든 경우의 수를 포함한다.
+-- 모든 경우의 수를 나열하므로 테이블의 행 개수가 많을수록 출력되는 정보의 수가 기하급수적으로 늘어나니 주의.
+SELECT * 
+FROM testA
+CROSS JOIN testB;
+
+---------------------------------------------------------------------------------
+USE BaseballData;
+
+-- 서로 다른 두 테이블에서, ID가 같은 사람을 동일인물로 가정하여 데이터를 비교하려면?
+-- (참고: 서브 쿼리를 활용할수도 있음)
+SELECT *
+FROM players
+ORDER BY playerID;
+SELECT *
+FROM salaries
+ORDER BY playerID;
+
+-- INNER JOIN (대상 테이블명) ON (결합 기준): 두 개의 테이블에서 결합 기준에 부합하는 요소를 한 행에 출력한다.
+-- 뒤의 테이블에 있는 열들이 앞의 테이블 열의 뒤쪽에 출력된다.
+SELECT *
+FROM players AS tableA
+INNER JOIN salaries AS tableB
+ON tableA.playerID = tableB.playerID;	-- 비교 대상이 'playerID'로 이름이 같으므로, 어디에 속한 playerID인지 명시한다.
+-- 만약 두 테이블 중 하나에 정보가 없을 경우(예를 들어 tableB에 playerID가 없을 경우) 조건에 해당되지 않는 것으로 판단, 정보가 출력되지 않는다.
+
+-- OUTER JOIN: INNER JOIN과 달리 둘 중 한 테이블에 정보가 없어도 무조건 출력한다. LEFT JOIN과 RIGHT JOIN으로 구성된다.
+-- LEFT JOIN (대상 테이블명) ON (결합 기준): 결합 기준의 왼쪽 정보가 있으면 무조건 표시한다. 오른쪽 정보가 없다면 NULL로 채운다.
+SELECT *
+FROM players AS tableA
+LEFT JOIN salaries AS tableB
+ON tableA.playerID = tableB.playerID; -- tableA에 playerID가 있다면 무조건 출력한다. tableB에 정보가 없으면 NULL로 채운다.
+-- RIGHT JOIN은 그 반대. 물론 결합 기준의 왼쪽-오른쪽을 바꾸면 LEFT JOIN - RIGHT JOIN 을 뒤바꾼 것과 같은 동작을 보인다.

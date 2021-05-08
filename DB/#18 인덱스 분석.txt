@@ -1,0 +1,85 @@
+-- 인덱스 분석
+
+-- 지금까지는 SQL 기초 구문을 살펴보았으며, 여기부터는 MMORPG 등 데이터가 매우 많이 쌓이는 상황인 경우를 가정하여 SQL 튜닝 기법에 대해 알아본다.
+-- 데이터베이스는 지금까지 사용한 Baseball 대신, 학습용으로 많이 사용되는 Northwind를 사용한다. 기업의 직원들에 대한 정보를 담은 테스트용 DB이다.
+
+USE Northwind;
+
+-- 참고: Norhwind Database가 없다면 참고자료를 복붙하여 한번 실행해주기
+-- 없을 경우 구글에 Norhwind Database 검색하여 깃허브 링크로 들어가서 instnwnd.sql 파일의 내용을 받으면 됨
+-- 또는 다운로드 링크 -> https://raw.githubusercontent.com/microsoft/sql-server-samples/master/samples/databases/northwind-pubs/instnwnd.sql (Ctrl + Click)
+
+------------------------------------------------------------
+
+-- DB 정보 살펴보기
+-- 아래 명령어들(EXEC, FILLFACTOR 등)은 굳이 외울 필요 없음
+EXEC sp_helpdb 'Northwind';
+
+-- 인덱스 테스트용임시 테이블 생성
+CREATE TABLE test
+(
+	employeeID INT NOT NULL,
+	lastName NVARCHAR(20) NULL,
+	firstName NVARCHAR(20) NULL,
+	hireDate DATETIME NULL
+);
+GO
+
+INSERT INTO test
+SELECT EmployeeID, LastName, FirstName, HireDate
+FROM Employees;
+
+SELECT *
+FROM test;
+
+-- 인덱스 생성은 '#12 인덱스' 자료 참고.
+-- FILLFACTOR: 해당 %만큼 리프 페이지 공간을 사용한다. 여기서는 1%를 사용한다.
+-- PAD_INDEX: 이 옵션을 켜면 FILLFACTOR 설정이 중간 페이지에도 적용된다.
+CREATE INDEX testIndex ON test(lastName) -- lastName에 인덱스를 걸어준다.
+WITH (FILLFACTOR = 1, PAD_INDEX = ON)
+
+GO
+
+-- 방금 만든 인덱스 번호 찾기
+SELECT index_id, name
+FROM sys.indexes
+WHERE object_id = object_id('test');
+-- testIndex의 index_id가 2번으로 나온다
+
+-- 2번 인덱스 정보 살펴보기
+DBCC IND('Northwind', 'Test', 2);
+-- 데이터가 트리 구조로 생성되어 있는 것을 확인할 수 있다.
+-- IndexLevel는 트리의 깊이를 나타낸다. 숫자가 높을수록 위쪽으로, 여기서는 2가 Root, 0이 Leaf에 해당한다.
+
+-- 현재 트리 구조는 아래와 같다. (PagePID 기준)
+--			849
+--		872		848
+--	832		840		841
+
+-- 각 page에 있는 정보를 살펴본다.
+-- DBCC PAGE (테이블명, 파일번호, 페이지번호, 출력옵션)
+DBCC PAGE('Northwind', 1, 832, 3);
+DBCC PAGE('Northwind', 1, 840, 3);
+DBCC PAGE('Northwind', 1, 841, 3);
+DBCC PAGE('Northwind', 1, 872, 3);
+DBCC PAGE('Northwind', 1, 848, 3);
+DBCC PAGE('Northwind', 1, 849, 3);
+-- HEAP RID는 8바이트의 식별자로, [페이지 주소(4바이트)][파일ID(2바이트)][슬롯번호(2바이트)] 로 구성된다.
+-- 테이블에서 정보가 실제로 위치한 곳을 의미하며 여기서 정보를 추출한다.
+-- lastName이 key로 지정되어 있는데, 이를 이용해 빠르게 다음 요소를 탐색한다. 문자열이므로 사전 순으로 정렬된다.
+
+-- 이에 따르면 각 페이지는 아래와 같은 정보를 담고 있다.
+--						849 (Leverling)
+--			872(Dodsworth)				848 (Leverling)
+--	832(Buchanan, ...)	840 (Dodsworth, ...)	841 (Leverling, ...)
+
+-- 'Callahan'이라는 사람을 찾을 경우 key값인 lastName을 기준으로,
+-- Root인 849 페이지 -> 사전 순으로 Leverling보다 Callahan이 앞이니 872 -> 832 페이지로 이동하여,
+-- 페이지 내의 요소를 하나씩 탐색해 Callahan이라는 key를 찾은 다음 HEAP RID를 통해 데이터를 추출한다.
+
+-- 용어 정리
+-- Random Access: 정보를 찾기 위해 한 페이지씩 접근하는 동작. 위와 같이 '페이지->페이지-> ... -> 페이지 내 탐색 -> HEAP RID 추출'의 일련의 동작.
+-- Bookmark Lookup: RID를 통해 한 행을 찾는 동작
+
+GO
+drop table test; -- 추후 재실행을 위한 테이블 삭제 동작

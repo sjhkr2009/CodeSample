@@ -1,0 +1,129 @@
+USE BaseballData;
+
+-- 변수와 흐름 제어
+
+-------------------------------------------- 변수 --------------------------------------------
+
+-- 변수 선언: DECLARE 변수명 AS 타입 (AS 생략 가능)
+-- 변수명은 테이블의 요소나 함수 등 다른 이름과 겹치지 않기 위해 특정 문자를 붙이는 경우가 많다. 여기선 @ 를 붙이기로 한다.
+DECLARE @i AS INT = 10; -- 선언과 동시에 초기값을 넣어줄수도 있다. (선택)
+
+-- 대입: SET 변수명 = 값
+DECLARE @j AS INT;
+SET @j = 10;
+
+-- 예) 역대 최고 연봉을 받은 선수의 정보는?
+SELECT TOP 1 *
+FROM players AS pTable
+INNER JOIN salaries AS sTable
+ON pTable.playerID = sTable.playerID -- playerID가 같은 사람을 하나의 테이블로 출력
+ORDER BY sTable.salary DESC;		 -- 연봉 내림차순 정렬
+
+-- 이 선수 이름을 변수에 저장하고 싶을 경우, 이름이 들어갈 변수명을 선언하고 대입한다.
+DECLARE @firstName AS NVARCHAR(15);
+
+SET @firstName = (SELECT TOP 1 nameFirst
+				  FROM players AS pTable
+				  INNER JOIN salaries AS sTable
+				  ON pTable.playerID = sTable.playerID
+				  ORDER BY sTable.salary DESC);
+
+DECLARE @lastName AS NVARCHAR(15);
+
+-- 참고로 SQL SERVER에선 다음과 같은 대입을 지원한다. SQL 표준은 아니라서 MySQL 등 다른 곳에선 지원하지 않을 수 있으니 주의.
+SELECT TOP 1 @firstName = pTable.nameFirst, @lastName = pTable.nameLast
+FROM players AS pTable
+INNER JOIN salaries AS sTable
+ON pTable.playerID = sTable.playerID
+ORDER BY sTable.salary DESC;
+
+
+----------------------------------------- 배치(batch) -----------------------------------------
+
+-- 하나의 묶음으로 분석되고 실행되는 명령어 집합
+-- GO 키워드를 기준으로, 전후 코드는 별개의 명령으로 취급된다.
+
+GO
+
+-- 아래 명령은 구문 오류라 명령이 실행되지 않지만, GO로 구분되어 있으므로 다른의 명령은 실행되어 결과가 출력된다.
+select * froooooooooooooooooooom salaries;
+
+GO
+
+-- C++/C#과 달리 변수의 범위가 중괄호로 지정되어있지 않다.
+-- 대신 배치를 이용해 유효범위를 설정할 수 있다.
+
+DECLARE @i AS INT = 5; -- 위에 @i 변수가 이미 있지만, GO가 있으므로 별개의 변수로 취급된다.
+-- SET @j = 5; -- @j는 GO로 인해 유효 범위가 끝났으므로 더 이상 사용할 수 없다.
+
+
+----------------------------------------- 흐름 제어 -----------------------------------------
+
+-- 조건문
+
+GO
+DECLARE @i AS INT = 10;
+
+-- C++/C#과 동일하게 if와 else로 사용하며, 별개로 범위를 지정하지 않으면 다음 1줄만 실행하는 것으로 취급한다.
+IF @i = 10
+PRINT('@i is 10');
+ELSE
+PRINT('@i is not 10');
+
+-- 조건문에 2개 이상의 명령을 넣고 싶다면, 중괄호가 아닌 BEGIN ~ END 를 사용한다.
+-- 이 방식은 다른 흐름 제어문에도 적용된다.
+IF @i = 10
+BEGIN
+	PRINT('@i is 10');
+	PRINT('Correct!');
+END
+ELSE
+BEGIN
+	PRINT('@i is not 10');
+	PRINT('No!');
+END
+
+
+-- 반복문
+
+SET @i = 0;
+
+-- 중괄호 대신 BEGIN ~ END를 사용한다는 점을 제외하면 C++/C#과 동일
+WHILE @i <= 10
+BEGIN
+	PRINT @i;
+	SET @i = @i + 1;
+	IF @i > 5 BREAK; -- BREAK를 사용하면 즉시 빠져나가는 점도 같다.
+END
+
+
+---------------------------------------- 테이블 변수 ----------------------------------------
+
+-- 임시로 사용할 데이터 테이블을 변수로 만들 수 있다.
+-- 이 임시 테이블은 tempdb에 임시로 저장되며, 별도로 삭제하지 않아도 변수 유효범위를 벗어나면 제거된다.
+
+GO
+
+-- 선언할 때 변수 타입을 TABLE로 지정한다.
+DECLARE @test TABLE
+(
+	playerName VARCHAR(50) NOT NULL,
+	salary INT NOT NULL
+);
+
+-- TABLE에 이름(풀 네임)과 연봉을 추가한다.
+INSERT INTO @test
+SELECT p.nameFirst + ' ' + p.nameLast, s.salary
+FROM players AS p
+INNER JOIN salaries AS s ON p.playerID = s.playerID;
+
+-- 임시 테이블이 출력되는 것을 확인할 수 있다.
+SELECT *
+FROM @test;
+
+GO -- @test 테이블은 삭제된다
+
+SELECT *
+FROM @test; -- error
+
+-----------------------------------------------------------------------------------------

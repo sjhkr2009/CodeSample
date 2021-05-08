@@ -1,0 +1,69 @@
+USE BaseballData
+
+-- SubQuery (서브쿼리 또는 하위쿼리)
+-- SQL 명령문 안에서 지정하는 하부 SELECT
+
+-- 연봉이 역대 가장 높았던 선수의 정보는
+Select Top 1 
+From salaries
+Order By salary DESC;
+-- rodrial01 선수가 나온다.
+-- 그럼 이 선수의 정보를 보려면
+Select 
+From players
+Where playerID = 'rodrial01';
+
+-- 이렇게 'SELECT로 찾은 대상'을 쿼리의 값으로 사용해야 할 때, 서브 쿼리를 통해 한 번의 명령으로 축약할 수 있다.
+SELECT 
+FROM players
+WHERE playerID = (SELECT TOP 1 playerID FROM salaries ORDER BY salary DESC); -- 괄호 안에 새로운 쿼리를 삽입한다. 이것이 서브 쿼리.
+
+-- 위에선 서브 쿼리가 playerID 하나만 출력했지만, 같은 행이 여러 개 있다면 오류가 발생한다.
+-- IN (대상)  대상이 값을 둘 이상 반환했을 경우, 그 중 아무거나 1개만 반환한다.
+SELECT 
+FROM players
+WHERE playerID IN (SELECT TOP 10 playerID FROM salaries ORDER BY salary DESC);
+-- 연봉이 가장 높은 10개의 연봉 데이터 중, 중복된 요소는 한 번씩만 반환하여 3명의 정보만 출력된다.
+
+-- 여러 쿼리의 정보를 동시에 출력할 수 있다.
+-- 예를 들어 플레이어 수와 배팅 데이터의 수를 출력하려면 다음과 같이 사용한다.
+SELECT (SELECT COUNT() FROM players) AS playerCount, (SELECT COUNT() FROM batting) AS battingInfoCount;
+
+-- 명령어로 특정 요소를 찾아서 사용해야 할 경우, 직접 찾아서 하드코딩하는 대신 서브쿼리로 대체할 수 있을지 생각해볼 수 있다.
+-- 예를 들어 새로운 선수에게 역대 최고 연봉보다 1 높은 연봉을 주고 싶다면, 아래와 같이 작성할 수 있다.
+INSERT INTO salaries
+VALUES (2021, 'KIA', 'KR', 'jiho', (SELECT MAX(salary) FROM salaries) + 1);
+
+-- INSERT INTO [테이블] SELECT  SELECT로 선택한 서브 쿼리를 테이블에 추가한다.
+INSERT INTO salaries
+SELECT 2020, 'KIA', 'KR', 'jiho2', (SELECT MAX(salary) FROM salaries) + 1;
+-- 다른 테이블에 기존 요소의 전부 또는 일부를 복사할 때 사용하기도 한다. 여기선 임시로 salary_insertIntoTest 테이블을 만들어 옮겨본다.
+INSERT INTO salary_insertIntoTest
+SELECT yearID, playerID, salary FROM salaries;
+
+-- (추가된 데이터 확인 및 삭제용)
+Select Top 5  From salaries Order by salary Desc;
+Delete From salaries Where lgID = 'KR';
+Select Top 5  From salary_insertIntoTest Order by salary Desc;
+Delete From salary_insertIntoTest;
+-------------------------------------------------------------
+
+-- 상관 관계 서브쿼리
+-- EXISTS, NOT EXISTS
+-- 당장 활용하긴 어려우나 읽을 수는 있도록 기억해둘 것
+
+-- 포스트 시즌 타격에 참여한 선수들 목록 (battingpost 테이블에 있음)
+SELECT *
+FROM players
+WHERE playerID IN (SELECT playerID FROM battingpost);
+
+-- 위를 다른 방식으로 표현하자면, 'players에서 playerID를 찾아보고, 그게 battingpost에 있는 ID면 가져와라' 가 된다.
+-- 이렇게 '데이터가 있는 경우' 를 조건으로 표현할 때 EXISTS, NOT EXISTS 를 사용한다.
+-- WHERE의 조건으로 EXISTS (서브쿼리) 를 사용하면, 서브쿼리에 대상이 있는 경우에만 조건이 TRUE가 된다.
+SELECT *
+FROM players
+WHERE EXISTS (SELECT playerID FROM battingpost WHERE battingpost.playerID = players.playerID);
+-- => players 테이블에서 모든 정보를 가져온다. 단, 해당 행의 playerID가 battingpost 테이블에도 playerID로 있는 경우에만.
+-- 결과적으로 위 2개의 쿼리는 같은 내용을 출력하지만, 후자의 경우 서브쿼리의 WHERE에서 battingpost.salary >= players.salary 처럼 부등호를 쓰는 등 표현 범위가 넓다.
+
+-- 참고: Ctrl + L 을 누르면 SQL 서버가 이 쿼리를 어떻게 실행할지 실행 계획을 보여준다. 각 단계에 따른 부하율을 볼 수 있어 최적화에 사용된다.

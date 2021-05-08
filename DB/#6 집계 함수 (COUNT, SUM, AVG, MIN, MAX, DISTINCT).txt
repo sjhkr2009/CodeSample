@@ -1,0 +1,34 @@
+-- 집계 함수
+
+-- 주요 기능: COUNT, SUM, AVG, MIN, MAX
+
+USE BaseballData
+
+-- COUNT(): 인자의 개수를 출력한다. 집계 함수에서 인자로 *을 넣을 수 있는 유일한 함수.
+-- 이 때, NULL값은 카운트하지 않는다.
+SELECT COUNT(*), COUNT(birthYear)
+FROM players;
+
+-- DISTINCT: 중복된 요소는 1회만 출력한다.
+SELECT DISTINCT birthCity
+FROM players;
+
+-- 단, DISTINCT 뒤에 여러 개의 요소가 있으면 모든 요소가 일치하는 경우에만 중복 출력을 방지한다. 나열된 요소 중 하나라도 다를 경우 모두 출력한다.
+SELECT DISTINCT birthYear, birthMonth
+FROM players
+ORDER BY birthYear
+
+-- 집계 함수와 함께 사용할 때는 '집계 함수(DISTINCT ~)' 형태로 사용한다.
+SELECT COUNT(DISTINCT birthCity)
+FROM players;
+
+-- AVG는 평균, SUM은 합계, MIN/MAX는 최소/최대를 출력한다. 물론 평균은 합계 / 개수 형태로도 표현할 수 있다.
+SELECT	AVG(weight) AS N'평균 몸무게(pound)', 
+		SUM(weight) / COUNT(weight) AS N'평균 몸무게(pound)',
+		MIN(weight) AS N'최소 몸무게',
+		MAX(weight) AS N'최대 몸무게'
+FROM players;
+
+-- 기본적으로 집계 함수는 NULL을 무시하지만, NULL을 따로 처리하려면 이전에 배운 분기문을 활용하면 된다.
+SELECT AVG(CASE WHEN (weight IS NULL) THEN 0 ELSE weight END)
+FROM players;

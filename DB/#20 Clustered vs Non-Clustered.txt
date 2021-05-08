@@ -1,0 +1,97 @@
+USE Northwind;
+
+-- Clustered vs Non-Clustered
+
+-- 인덱스 시간에 알아본 인덱스 종류
+-- Clustered: 국어사전과 비슷함. 실제 데이터 정렬 순서를 Key 값 순서로 변경함.
+-- Non-Clustered: 색인과 비슷함. 실제 데이터엔 영향 없이 별개로 찾을 수 있는 표기만 해 둠.
+
+-- 지난 시간에 데이터는 페이지들의 트리 구조로 구성되고, 데이터가 실제로 저장되는 부분이 리프 페이지임을 확인했다.
+
+-- Clustered Index
+	-- Leaf Page = Data Page (리프 페이지에 실제 데이터가 위치한다)
+	-- 데이터는 Clustered Index의 키 순서로 정렬된다
+
+-- Non-Clustered Index
+-- Clustered Index의 유무에 따라서 다르게 동작한다.
+	-- 1) Clustered Index가 있는 경우
+		-- Heap Table이 없으며 리프 페이지에는 Heap RID 대신 실제 데이터가 있다.
+		-- Heap RID는 존재하지 않으며, Clustered Index의 실제 키 값을 들고 있다. 이를 통해 데이터를 찾는다.
+
+	-- 2) Clustered Index가 없는 경우
+		-- 데이터는 Heap Table이라는 곳에 저장된다.
+		-- Heap RID를 통해 접근하여 데이터를 추출한다.
+		-- Heap RID는 Heap Table의 주소, 즉 어느 테이블의 몇 번째 행에 데이터가 있는지를 나타낸다.
+
+
+
+-- ex1) Non-Clustered Index만 존재하는 경우
+--		지난 시간에 했던 방식대로 인덱스를 추가하고 조회해본다.
+
+-- 임시 테스트 테이블을 생성하여 데이터 복사
+SELECT *
+INTO TestOrderDetails
+FROM [Order Details];
+
+SELECT *
+FROM TestOrderDetails;
+
+-- 인덱스 추가
+CREATE INDEX Index_OrderDetails
+ON TestOrderDetails(OrderID, ProductID);
+
+-- 인덱스 정보 확인
+EXEC sp_helpindex 'TestOrderDetails';
+-- 인덱스 번호 찾기
+SELECT index_id, name
+FROM sys.indexes
+WHERE object_id = object_id('TestOrderDetails');
+
+-- 인덱스 조회
+DBCC IND('Northwind', 'TestOrderDetails', 2);
+-- 루트 노드는 904, 그 아래에 824, 848, ..., 852가 있는 형태
+
+DBCC PAGE('Northwind', 1, 824, 3);
+-- 리프 페이지를 하나 조회해보면 데이터들이 Heap RID를 가진 것을 확인할 수 있다. (구성은 지난번 코드 참고)
+
+DBCC IND('Northwind', 'TestOrderDetails', 1);
+
+GO
+
+
+-- ex2) Non-Clustered Index + Clustered Index
+--		Clustered Index를 추가한 후 확인해본다.
+CREATE CLUSTERED INDEX Index_OrderDetails_Clustered
+ON TestOrderDetails(OrderID);
+
+-- 인덱스 정보 확인
+EXEC sp_helpindex 'TestOrderDetails';
+
+-- 인덱스 번호 찾기
+SELECT index_id, name
+FROM sys.indexes
+WHERE object_id = object_id('TestOrderDetails');
+
+-- 인덱스 조회
+DBCC IND('Northwind', 'TestOrderDetails', 2);
+-- Clustered Index가 추가되어 데이터 정렬 순서가 변경되었다.
+-- 첫 번째 리프 페이지가 952로 조회된다.
+
+DBCC PAGE('Northwind', 1, 952, 3);
+-- Heap RID가 사라져 있고, UNIQUIFIER가 추가된 것을 확인할 수 있다.
+-- Clustered Index의 조건으로 OrderID만 걸어줬는데 겹치는 OrderID가 있어서, 내부적으로 UNIQUIFIER를 만들어서 (OrderID, UNIQUIFIER)의 조합이 한 행에 하나씩만 존재하게 한 것이다.
+
+-- 참고로 페이지타입을 1로 조회하면 인덱스 페이지가 아니라 실제 데이터가 들어 있는 데이터 페이지를 조회하게 된다.
+DBCC IND('Northwind', 'TestOrderDetails', 1);
+-- Clustered Index가 추가될 경우 Non-Clustered Index도 Head RID가 아니라 데이터의 key값을 들고 있으므로, 이 key값을 통해 다시 데이터 페이지를 조회하게 된다.
+
+
+-- Non-Clustered Index만 있을 때: 페이지 공간(트리 구조) 탐색 -> 리프 페이지 -> 원하는 데이터의 Head RID 찾음 -> Heap Table에서 데이터 추출
+-- Clustered Index도 있을 때: 페이지 공간(트리 구조) 탐색 -> 리프 페이지 -> 원하는 데이터의 Clustered Key값 찾음 -> Data Table에서 Key값으로 데이터 찾음 -> 데이터 추출
+
+-- Clustered Index가 추가되면 Non-Clustered Index의 탐색 방식에도 영향을 준다는 점을 기억할 것.
+
+
+GO
+-- 테스트용 테이블 삭제
+DROP TABLE TestOrderDetails;

@@ -1,0 +1,120 @@
+USE Northwind;
+
+-- 복합 인덱스
+-- Non-Clustered Index는 한 테이블에 둘 이상 걸 수 있다. 여러 열에 동시에 인덱스를 거는 것을 복합 인덱스라고 한다.
+
+-- 주문 상세 정보를 통해 실습하기로 한다
+SELECT *
+FROM [Order Details]
+ORDER BY OrderID;
+
+-- 임시 테스트 테이블을 만들고 데이터를 복사한다 (원본에 맘대로 인덱스를 추가하지 않고 테스트만 하기 위해)
+SELECT *
+INTO TestOrderDetails
+FROM [Order Details];
+
+SELECT *
+FROM TestOrderDetails;
+
+-- 복합 인덱스를 추가할 땐 인덱스를 걸 열을 (A,B,...) 형태로 함께 입력하면 된다. 인덱스로 검색할 때 A -> B -> ... 순으로 검색하게 된다.
+-- 여기서는 (OrderID, ProductID) 형태로 복합 인덱스를 추가한다.
+CREATE INDEX Index_TestOrderDetails
+ON TestOrderDetails(OrderID, ProductID);
+
+-- 인덱스 정보 살펴보기
+EXEC sp_helpindex 'TestOrderDetails';
+
+-- 인덱스 적용 테스트
+-- F5로 실행 후 Ctrl + L 을 누르면 실행 계획(Execution Plan)을 볼 수 있다.
+-- Index Seek로 나올 경우 인덱스를 활용하여 대상을 탐색하는 것이며, Table Scan으로 나오면 인덱스를 활용하지 못 하고 테이블을 하나하나 스캔하며 찾는 것.
+SELECT *
+FROM TestOrderDetails
+WHERE OrderID = 10248 AND ProductID = 11; -- 두 인덱스 동시 사용 시 인덱스를 활용하여 탐색한다.
+-- 참고로 순서를 변경해도 알아서 OrderID -> ProductID 순으로 인덱스를 사용하여 탐색한다.
+
+-- OrderID만 사용해도 인덱스를 활용한다.
+SELECT *
+FROM TestOrderDetails
+WHERE OrderID = 10248;
+
+-- 단, 첫 번째 인덱스인 OrderID를 사용하지 않고 ProductID만으로 검색할 경우, Table Scan으로 대상을 찾게 된다.
+SELECT *
+FROM TestOrderDetails
+WHERE ProductID = 11;
+
+-- 즉 (A,B,C,...) 형태로 복합 인덱스를 사용중일 경우, A 인덱스는 없어도 된다. 복합 인덱스의 가장 우선순위인 A는 단독으로 검색해도 Index Seek가 가능하기 때문.
+-- 단, 인덱스 B 단독으로 검색하는 경우가 있다면, 인덱스 B도 별도로 걸어야 한다. 복합 인덱스에 B가 있어도 B만으로는 Index Seek가 불가능하다.
+
+-- 지난 시간처럼 INDEX 정보를 검색한다. 
+-- 이전에는 공간의 1%만 사용하게 했지만 이번엔 별도로 조치를 취하지 않았으니, 트리가 높지 않을 것이다.
+DBCC IND('Northwind', 'TestOrderDetails', 2);
+
+-- 현재 인덱스 구조
+--			888
+-- 824 848 849 850 851 852
+
+-- 가장 우선순위가 높은(PrevPage가 없는 맨 앞 요소) 824페이지부터 해당 페이지의 정보를 출력해보면...
+DBCC PAGE('Northwind', 1, 824, 3);
+-- OrderID 순으로 정렬하고, OrderID가 같을 경우 ProductID 순으로 되어있는 것을 확인할 수 있다.
+
+
+GO
+
+-- 인덱스는 데이터가 추가/삭제/변경되어도 유지되어야 한다.
+-- OrderID 10248에 데이터 50개를 강제로 넣어서 테스트해보자
+DECLARE @i INT = 0;
+WHILE @i < 50
+BEGIN
+	INSERT INTO TestOrderDetails
+	VALUES (10248, 100 + @i, 10, 1, 0); --(OrderID, ProductID, 나머지는 그냥 임의의 정보로 채운다) ProductID는 안 겹치게 100부터 1씩 늘리면서 넣는다.
+	SET @i = @i + 1;
+END
+
+-- 다시 위와 같이 인덱스 정보를 확인한다.
+DBCC IND('Northwind', 'TestOrderDetails', 2);
+-- 824 페이지의 NextPagePID가 889(또는 다른 새로운 값)로 변경된 것을 확인할 수 있다.
+-- 즉, 현재 인덱스 구조는 아래와 같다.
+--			   888
+-- 824 889 848 849 850 851 852
+
+-- 페이지를 확인해보면 824에 있던 데이터가 너무 많아서, 889를 만들어서 둘로 나눠 저장하고 있음을 확인할 수 있다.
+DBCC PAGE('Northwind', 1, 824, 3);
+DBCC PAGE('Northwind', 1, 889, 3);
+
+-- 따라서, 페이지에 여유 공간이 없으면 분할이 일어남을 알 수 있다.
+
+
+GO
+
+-- 가공 테스트
+-- 인덱스를 사용할 때 주의할 점이 있는데, 
+
+-- TestEmployees라는 임시 테이블을 만들어서 Employees - LastName을 넣어준다.
+SELECT LastName
+INTO TestEmployees
+FROM Employees;
+
+-- LastName에 인덱스를 추가한다
+CREATE INDEX Index_TestEmployees
+On TestEmployees(LastName);
+
+-- 아래와 같이 LastName을 가공한 요소(앞 2글자)를 통해 찾으면, 실행 계획을 확인했을 때 인덱스를 활용하지 못 하고 Table Scan이 뜰 수 있다.
+SELECT *
+FROM TestEmployees
+WHERE SUBSTRING(LastName, 1, 2) = 'Bu';
+
+-- LastName을 직접 사용하여 비교해야 정상인 Index Seek를 보장할 수 있다.
+SELECT *
+FROM TestEmployees
+WHERE LastName LIKE 'Bu%';
+
+
+-- 정리
+-- 1. 복합 인덱스 (A,B)는 A->B 순서로 탐색한다. B 단독 검색은 인덱스 활용 불가함에 유의.
+-- 2. 인덱스 사용 시 데이터 추가로 페이지 여유 공간이 없으면 split이 일어난다.
+-- 3. 인덱스를 걸어도 key를 직접 사용하지 않고 가공하여 검색하면 인덱스를 통해 탐색되지 않으니 주의.
+
+GO
+
+-- 테스트용 테이블 삭제
+drop table TestOrderDetails;

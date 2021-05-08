@@ -1,0 +1,47 @@
+인덱스
+: 데이터베이스에서 특정 정보를 빨리 찾기 위한 장치
+
+책에서 특정 단어가 몇 페이지에 나오는지 찾아보려면?
+-> 책 뒤쪽의 색인(index)을 통해 주요 키워드를 찾아볼 수 있다.
+
+이진 검색 트리를 예로 들면, 작은 요소는 왼쪽, 큰 요소는 오른쪽으로 간다는 규칙을 이용해서
+모든 원소를 탐색하지 않아도 원하는 값을 빠르게 찾을 수 있다.
+
+예시1)
+RPG에서 귓속말을 할 때 이름으로 해당 유저의 정보를 찾아야 한다. 귓말을 할 때마다 유저 DB 전체를 탐색해야 할까?
+-> 가나다순으로 인덱스를 걸면 이름을 빠르게 탐색할 수 있다.
+(현재 문자열 우선순위와 내가 원하는 우선순위를 비교하면, 이진 검색 트리처럼 탐색 가능)
+
+- 그럼 모든 열에 인덱스를 걸면 항상 좋을까?
+
+예시2)
+직업이 전사, 궁수, 도적, 마법사의 4가지이다. 직업(class) 열에 인덱스를 걸어 탐색하면?
+-> 인덱스로 탐색해봐야 전체 DB의 1/4이 튀어나오니 다시 찾아야 하므로 의미가 없다.
+
+
+Clustered Index
+- 실제 데이터가 key값에 의해 이미 정렬된 상태로 저장되어 있다. (영어사전이 abc 순으로 저장되어 있듯이)
+- Clustered Index는 테이블 당 1개만 설정할 수 있다. (사전을 가나다순이면서 동시에 길이 순으로 정렬할 순 없다)
+- 데이터의 유일성이 보장되어야 한다. 일반적으로 게임에서는 ID 등 고유한 값으로 Clustered Index를 걸어준다.
+- Primary Key는 대부분 Clustered Index이다.
+
+Non-Clustered Index
+- 물리적인 데이터 자체엔 영향을 미치지 않고, 따로 검색에 사용하는 일종의 테이블 (책 뒷부분에 나오는 색인)
+- Clustered Index에 비해 느리지만 별다른 제한이 없다. Primary Key 외의 다른 키들은 보통 여기에 속한다.
+
+SQL에서 사용 방법 (MSSQL 기준)
+- Clustered Index는 PRIMARY KEY를 이용하여 설정한다. #10의 '제약' 부분 참고
+ ㄴ 예시)
+	ALTER TABLE myTable
+	ADD PRIMARY KEY (name);
+
+	ALTER TABLE myTable
+	ADD CONSTRAINT myKey PRIMARY KEY (name); -- 'myKey'가 Clustered Index에 해당한다.
+
+- Non-Clustered Index는 아래와 같다.
+- 인덱스 생성: CREATE INDEX 인덱스명 ON 테이블이름(열이름)
+	ㄴ ex1) CREATE INDEX idx1 ON myTable(name);
+	ㄴ ex2) 겹치는 인덱스 없는 유니크 인덱스를 만들 땐, CREATE UNIQUE INDEX idx2 ON myTable(name);
+ ㄴ CREATE CLUSTERED INDEX도 가능하지만, (Primary Key를 포함한)Clustered Index가 이미 있다면 생성 불가능하다.
+- 인덱스 삭제: DROP INDEX 테이블이름.인덱스명
+	ㄴ ex) DROP INDEX myTable.idx1;

@@ -1,0 +1,63 @@
+Use BaseballData
+
+-- GROUP BY : 특정 속성의 값이 같은 요소들을 하나의 그룹으로 취급한다. 팀별로 묶어서 뭔가를 분석하고 싶을 때 사용한다.
+
+-- 복습1: 2004년 보스턴 소속으로 출전한 선수들의 타격 정보
+Select *
+From batting
+Where yearID = 2004 and teamID = 'BOS'
+
+-- 복습2: 2004년 보스턴 소속으로 출전해서 날린 홈런 개수
+Select SUM(HR)
+From batting
+Where yearID = 2004 and teamID = 'BOS'
+
+-- 그렇다면, 2004년도에 가장 많은 홈런을 날린 팀은?
+Select * From batting Where yearID = 2004
+Order By teamID;
+-- 여기서 팀별로 홈런 개수의 합계를 구하고 비교하면 된다.
+
+-- GROUP BY를 사용할 경우 검색 대상은 해당 팀이 가진 정보가 된다.
+-- 따라서 GROUP BY teamID 사용 시, 팀이 가진 정보 외에는 SELECT할 수 없다. HR(홈런 개수) 등은 개인이 가진 정보지 팀이 가진 정보가 아니므로 역시 불가능하다.
+-- 분류 기준인 teamID는 각 그룹이 가진 정보이므로 Select할 수 있다. 무슨 기준으로 그룹화했는지 알아야 하므로 일반적으로 GROUP BY의 기준은 Select하는 편.
+SELECT teamID	-- 팀 자체가 가지고 있지 않은 playerID 등은 검색할 수 없다. * 역시 이런 부분을 포함하므로 불가능.
+FROM batting
+WHERE yearID = 2004
+GROUP BY teamID;
+
+-- 팀원들의 평균 안타, 홈런 합계, 최소 출전회수 등은 팀이 가진 정보이므로 출력할 수 있다. 따라서 집계 함수와 함께 활용되는 경우가 많다.
+-- 각 팀별로 2004년 소속 플레이어 수와 홈런 합계를 구하면 아래와 같다.
+SELECT teamID, COUNT(teamID) AS playerCount, SUM(HR) AS homerunCount
+FROM batting
+WHERE yearID = 2004
+GROUP BY teamID
+-- 여기서 홈런을 가장 많이 친 팀을 알고 싶다면,
+ORDER BY homerunCount DESC;
+-- 이제 홈런이 가장 많은 팀부터 순서대로 출력된다.
+
+
+-- Q) 2004년에 200홈런 이상을 날린 팀의 목록은?
+SELECT teamID, SUM(HR) AS homerunCount
+FROM batting
+WHERE yearID = 2004
+-- WHERE에서 (homerunCount >= 200) 와 같은 식으로 필터링할 수 없다. 개별 행에 대해 조건을 설정하며 그룹화 전에 실행되기 때문에 집계가 불가능하다.
+GROUP BY teamID
+-- HAVING은 그룹에 대한 조건을 지정한다.
+--(homerunCount >= 200)와 같은 필터링은 불가한데, WHERE과 달리 GROUP BY 이후에 실행되긴 하지만 여전히 SELECT 앞에 실행되므로 homerunCount를 찾을 수 없다.
+HAVING SUM(HR) >= 200
+ORDER BY homerunCount DESC;
+
+-- 참고: 각 명령어의 논리적인 실행 순서 정리
+-- FROM			창고에서
+-- WHERE		공을
+-- GROUP BY		탁구공 상자에서
+-- HAVING		빨간색(탁구공)은 제외하고
+-- SELECT			갖고 와서
+-- ORDER BY		색상별로 정리해주세요.
+
+
+-- Q) 역사상 단일 년도에 가장 많은 홈런을 날린 팀은 몇년도의 무슨 팀인가?
+SELECT teamID, yearID, SUM(HR) AS homerumCount
+FROM batting
+GROUP BY teamID, yearID		-- 둘 모두가 일치하는 정보만 한 그룹이 된다.
+ORDER BY homerumCount DESC;

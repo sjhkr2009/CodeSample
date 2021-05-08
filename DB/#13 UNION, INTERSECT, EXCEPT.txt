@@ -1,0 +1,54 @@
+USE BaseballData;
+
+-- UNION : 여러 쿼리문에서 추출한 결과를 중복 없이 하나로 합쳐 출력한다. (합집합)
+-- INTERSECT : 여러 쿼리문에서 추출한 결과에 모두 들어있는 정보만 출력한다. (교집합)
+-- EXCEPT : 특정 쿼리 결과에서 다른 결과에 해당하는 부분을 제외하고 출력한다. (차집합)
+
+-- RDBMS (Relational - 관계형)
+-- 데이터를 집합으로 간주한다는 의미. 즉 여러 테이블을 연동하여 정보를 추출할 필요가 생긴다.
+-- 복수의 테이블을 다루는 방법이 필요하다.
+
+-- Ex1) 커리어 평균 연봉이 3,000,000 이상인 선수들의 playerID는?
+SELECT playerID, AVG(salary) as averageSalary
+FROM salaries
+GROUP BY playerID
+HAVING AVG(salary) >= 3000000;
+
+-- Ex2) 12월에 태어난 선수들의 playerID는?
+SELECT playerID, birthMonth
+FROM players
+WHERE birthMonth = 12;
+
+-- 그렇다면, [평균 연봉이 300만 이상] 또는 [12월에 태어난] 선수는?
+SELECT playerID
+FROM salaries
+GROUP BY playerID
+HAVING AVG(salary) >= 3000000
+UNION		-- UNION을 사용하면 두 쿼리문을 합쳐서 동시에 출력한다. 중복된 요소는 한 번만 출력한다.
+SELECT playerID
+FROM players
+WHERE birthMonth = 12
+ORDER BY playerID	-- ORDER BY는 두 쿼리문을 합친 후 마지막에 호출한다.
+-- 참고: UNION ALL을 사용하면 중복을 허용해서 합치게 된다.
+
+-- [평균 연봉이 300만 이상] 그리고 [12월에 태어난] 선수는?
+SELECT playerID
+FROM salaries
+GROUP BY playerID
+HAVING AVG(salary) >= 3000000
+INTERSECT		-- INTERSECT를 사용하면 두 쿼리문에 모두 해당되는 요소만 출력한다.
+SELECT playerID
+FROM players
+WHERE birthMonth = 12
+ORDER BY playerID
+
+-- [평균 연봉이 300만 이상] 선수 중에서 [12월에 태어난] 선수를 제외하고 출력하려면?
+SELECT playerID
+FROM salaries
+GROUP BY playerID
+HAVING AVG(salary) >= 3000000
+EXCEPT		-- EXCEPT를 사용하면 앞의 결과에서 뒤의 결과를 제외하고 출력한다.
+SELECT playerID
+FROM players
+WHERE birthMonth = 12
+ORDER BY playerID

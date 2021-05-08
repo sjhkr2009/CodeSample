@@ -1,0 +1,43 @@
+-- CASE
+
+-- IF와 함께 대표적인 분기문(조건문)으로, 조건에 따른 값을 출력한다.
+-- C#/C++의 switch ~ case 문과 유사한 기능
+
+USE BaseballData
+
+-- 데이터 마지막 행에 태어난 해의 계절을 출력하고 싶다고 가정한다. (아래에서 1이 들어가 있는 부분)
+SELECT *, 1 AS birthSeason
+FROM players;
+
+-- CASE문에 체크할 변수를 넣고, WHEN [변수의 값] THEN [출력할 값] 형태로 입력한다.
+-- 마지막에는 END가 들어가야 하며, 출력된 값을 넣을 새로운 변수를 AS [변수] 형태로 입력한다.
+-- 어느 조건에도 해당하지 않을 경우(switch문의 default에 해당하는 기능)는 ELSE로 입력할 수 있다. 이 때 ELSE가 없다면 기본값(NULL)이 입력된다.
+SELECT *,
+	CASE birthMonth
+		WHEN 1 THEN N'겨울'
+		WHEN 2 THEN N'겨울'
+		WHEN 3 THEN N'봄'
+		WHEN 4 THEN N'봄'
+		WHEN 5 THEN N'봄'
+		WHEN 6 THEN N'여름'
+		WHEN 7 THEN N'여름'
+		WHEN 8 THEN N'여름'
+		WHEN 9 THEN N'가을'
+		WHEN 10 THEN N'가을'
+		WHEN 11 THEN N'가을'
+		WHEN 12 THEN N'겨울'
+		ELSE N'???'
+	END AS birthSeason
+FROM players;
+
+-- WHEN [조건] THEN [출력할 값] 형태로 입력할수도 있다.
+-- if ~ else와 비슷한 형태가 된다.
+SELECT *,
+	CASE
+		WHEN (birthMonth <= 2) OR (birthMonth >= 12) THEN N'겨울'
+		WHEN (birthMonth <= 5) THEN N'봄'
+		WHEN (birthMonth <= 8) THEN N'여름'
+		WHEN (birthMonth <= 11) THEN N'가을'
+		ELSE N'???'
+	END AS birthSeason
+FROM players;

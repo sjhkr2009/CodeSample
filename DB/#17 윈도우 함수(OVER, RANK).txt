@@ -1,0 +1,56 @@
+USE BaseballData;
+
+-- 윈도우 함수
+-- 행들의 서브 집합을 대상으로, 각 행별로 계산해서 스칼라(단일 고정)값을 출력하는 함수
+
+-- GROUP BY와의 차이점은?
+Select playerID, MAX(salary) as maxSalary
+From salaries
+Group by playerID	-- playerID가 같은 행들은 하나의 그룹으로 간주
+Order by MAX(salary) desc;
+-- 이렇게 하면 Select * 와 같이 쓸 수 없고, 출력할 수 있는 정보는 그룹당 하나의 값만 가지는 요소로 한정된다.
+
+-- 양식: ~OVER([PARTITION] [ORDER BY] [ROWS])
+
+-- 예시) 전체 데이터를 연봉 순서로 나열하고, 순위를 표기하고 싶을 경우
+-- * 여기서는 ORDER BY 옵션만 사용하기로 한다.
+SELECT *,
+	ROW_NUMBER() OVER (ORDER BY salary DESC),	-- ROW_NUMBER: 행 번호. 행마다 1씩 증가한다. (1,2,3, ...)
+	RANK() OVER (ORDER BY salary DESC),			-- RANK: 랭킹.  ROW_NUMBER와 같으나 우선순위가 같은 요소는 같은 번호를 부여한다. (1등이 2명인 경우 1,1,3, ...)
+	DENSE_RANK() OVER (ORDER BY salary DESC),	-- DENSE_RANK: 랭킹에서 같은 랭크가 여러 명 있어도 다음 번호를 건너뛰지 않는다. (1등이 2명인 경우 1,1,2, ...)
+	NTILE(5000) OVER (ORDER BY salary DESC)		-- NTILE(n): n을 마지막 행으로 간주할 때 1~n 사이로 환산한 상대적 위치를 나타낸다. 백분율 등 상위 몇 % 인지 알고 싶을 때 사용된다.
+FROM salaries;
+
+-- 예시2) 각 선수가 매년 자신의 연봉만으로 매긴 순위를 보고 싶어 한다면?
+-- * 파티션을 이용하여 특정 구간에서의 순위만 출력할 수 있다.
+SELECT *,
+	RANK() OVER (PARTITION BY playerID ORDER BY salary DESC) -- Group By처럼 같은 playerID를 가진 행들을 한 그룹으로 간주, 그룹 내의 랭킹을 출력한다.
+FROM salaries
+ORDER BY playerID;
+
+-- LAG(열 이름): 지정한 기준으로 나열했을 때, 바로 이전 행의 요소를 출력한다. (해당 기준에서 내가 첫번째라 이전 요소가 없으면 NULL)
+-- LEAD(열 이름): 바로 다음 행의 요소를 출력한다.
+SELECT *,
+	RANK() OVER (PARTITION BY playerID ORDER BY salary DESC),
+	LAG(salary) OVER (PARTITION BY playerID ORDER BY salary DESC) AS prevSalary,
+	LEAD(salary) OVER (PARTITION BY playerID ORDER BY salary DESC) AS nextSalary
+FROM salaries
+ORDER BY playerID;
+
+-- FIRST_VALUE(열 이름) / LAST_VALUE(열 이름): 지정한 기준으로 나열했을 때, 첫 번째와 마지막 값을 출력한다.
+-- 주의: 연산 시점에서 첫 행과 마지막 행의 값이 출력된다. 10개의 행이 있을 때 마지막 행은 10번째라도, 3번째 행을 출력하는 시점에선 3번째가 마지막이므로 3번째 값이 나온다.
+-- * 이 때 ROWS로 범위를 지정해주면, 해당 범위 내에서 첫 번째와 마지막 값을 구할 수 있다.
+SELECT *,
+	RANK() OVER (PARTITION BY playerID ORDER BY salary DESC),
+	FIRST_VALUE(salary) OVER (	PARTITION BY playerID 
+								ORDER BY salary DESC
+								ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW	-- 처음 행에서 현재 행까지
+								) AS bestSalary,
+	LAST_VALUE(salary) OVER (	PARTITION BY playerID 
+								ORDER BY salary DESC
+								ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING	-- 현재 행에서 마지막 행까지
+								) AS worstSalary
+FROM salaries
+ORDER BY playerID;
+-- UNBOUNDED PRECEDING: 처음 행
+-- UNBOUNDED FOLLOWING: 마지막 행
