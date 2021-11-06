@@ -1,8 +1,10 @@
 USE Northwind;
 
+-- 인덱스에 대해서는 '#12 인덱스' 파일 참고
+
 -- Clustered vs Non-Clustered
 
--- 인덱스 시간에 알아본 인덱스 종류
+-- 인덱스 종류
 -- Clustered: 국어사전과 비슷함. 실제 데이터 정렬 순서를 Key 값 순서로 변경함.
 -- Non-Clustered: 색인과 비슷함. 실제 데이터엔 영향 없이 별개로 찾을 수 있는 표기만 해 둠.
 

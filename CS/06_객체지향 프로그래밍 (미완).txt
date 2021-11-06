@@ -1,0 +1,108 @@
+객체지향 프로그래밍
+
+1. 객체
+- 객체지향: 객체 내에 데이터와 프로시저(기능)가 들어 있는 형태
+ ㄴ 다른 객체의 프로시저를 호출하여 사용한다.
+ ㄴ 절차지향: 데이터를 여러 프로시저가 공유하는 방식
+- 메시지: 객체와 객체 간의 상호작용을 가리킨다.
+ ㄴ ex) 메서드 호출 메시지, 리턴 메시지, 익셉션 메시지 등
+- 데이터를 저장하고 호출(get/set)하는 기능만 존재하는 클래스는 객체지향 프로그래밍에서 의미하는 ‘객체’보다는 데이터에 가까우며, 데이터 클래스라고도 한다.
+ ㄴ Java는 구조체가 없어 클래스를 대신 사용하며, 구조체가 있는 언어도 참조를 사용하기 위해 데이터 클래스를 사용하기도 한다.
+
+2. 캡슐화
+- 데이터와 관련된 기능을 데이터와 묶는 것
+- 외부에 영향 없이 객체 내부 구현을 변경할 수 있다.
+- 정보 은닉: 기능의 구현을 외부에 감춘다.
+ ㄴ 객체가 기능을 구현할 때 어떤 타입의 데이터를 어떻게 사용하는지 감춤
+-----------------------------------------------------------------
+* 예시: 사용자 계정을 5년 이상 사용 시 1달간 프리미엄 혜택을 제공한다는 수정 요청
+ - 캡슐화 X : 사용자 계정의 데이터에 접근하는 부분 전체에 대한 수정 필요
+Before:	if (account.GetState() == State.Premium &&
+	 account.GetExpireDate().IsAfterNow())
+		... 프리미엄 회원 혜택 ...
+After:	if((account.GetState() == State.Premium &&
+	 account.GetExpireDate().IsAfterNow()) ||
+	(account.JoinDate().AddYears(5) > ServerTime.Now && 
+	account ... ) ...
+ - 캡슐화 O : 내부 데이터가 아닌 프리미엄 회원인지 확인하는 기능만 사용
+Before:	if (account.IsPremium) ... 프리미엄 회원 혜택 ...
+After:	위와 동일
+-----------------------------------------------------------------
+- 캡슐화를 시도하면서 기능에 대한 이해를 높일 수 있다.
+ ㄴ 위 예시에서 State == Premium을 확인하는 이유는 프리미엄 권한을 확인하려는 의도
+
+2.1. 캡슐화를 위한 규칙
+ (1) Tell, Don't Ask: 데이터를 달라고 하지 말고 해달라고 할 것
+ - 계정의 데이터를 가져와서 비교하는 대신, 프리미엄 유저인지 확인해달라고 한다.
+ (2) Demeter's Law(데미테르 법칙): 메서드에서 생성한 객체, 파라미터로 받은 객체, 필드로 참조하는 객체의 메서드만 호출할 것
+ - account.GetExpireDate().IsAfterNow() -> account.IsExpired()
+ - Date date = account.GetExpireDate(); date.IsAfter(ServerTime.Now);
+	-> account.IsValid(ServerTime.Now);
+
+2.2. 캡슐화 예제
+1) 로그인 인증 코드
+ - 유효성이 인증된 이메일은 숫자 2로 표시한다고 가정한다.
+-----------------------------------------------------------------
+public AuthResult Authenticate(string id, string pw) {
+	Member mem = FineOne(id);
+	if (mem == null)
+		return AuthResult.NoMatch;
+	// if (mem.GetVerificationEmailStatus() != 2) Tell, Don't Ask
+	// 데이터를 가져와 비교하지 말고, 유효한지 확인해달라고 하기
+	if (!mem.IsEmailVerified())
+		return AuthResult.NoEmailVerified;
+	if (passwordEncoder.IsPasswordValid(mem.Password, pw, mem.Id)
+		return AuthResult.Success;
+	return AuthResult.NoMatch;
+}
+-----------------------------------------------------------------
+
+2) 이메일 유효성 검사
+-----------------------------------------------------------------
+public void VerifyEmail(string token) {
+	Member mem = FindByToken(token);
+	if(mem == null) throw new BadTokenException();
+
+/*	데이터를 가져와서 변경하는 식의 동작은 해당 클래스로 이관한다.
+	if(mem.GetVerificationEmailStatus() == 2)
+		throw new AlreadyVerifiedException();
+	else
+		mem.SetVerificationEmailStatus(2);
+*/
+	mem.VerifyEmail();
+
+	SaveOnDatabase();
+}
+-----------------------------------------------------------------
+
+3) 영화 대여 시 적립할 포인트 계산
+-----------------------------------------------------------------
+public class Rental {
+	private Movie movie;
+	private int rentalDay;
+	public int GetMembershipPoints() {
+/*	
+		if (movie.PriceCode == Movie.NewRelease || rentalDay > 2)
+			return 150;
+		else
+			return 100;
+*/	// 계산에 필요한 데이터를 넘겨서 계산을 요청
+		return movie.CalculatePoints(rentalDay);
+	}
+}
+-----------------------------------------------------------------
+
+4) 시간 측정하기
+-----------------------------------------------------------------
+public async void CalculateTime(Func<Task> func){
+	Timer t = new Timer();
+	// t.startTime = System.GetCurrentTime();
+	t.Start();
+	await func();
+	
+	// t.stopTime = System.GetCurrentTime();
+	t.Stop();
+	// Print(t.stopTime - t.StartTime);
+	Print(t.ElapsedTime);
+}
+-----------------------------------------------------------------
