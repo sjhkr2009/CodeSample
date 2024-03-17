@@ -20,6 +20,7 @@ Shader "Custom/CustomShader"
         
         [Space(5)]
         [Toggle()] _UseGradient("Use Gradient?", float) = 0
+        [Toggle()] _OverlayAlpha("Gradient Alpha Overlay?", float) = 0
         _GradBlend("Gradient Blend", Range(0,1)) = 1
         [Toggle()] _GradVertical("Use Vertical Gradient?", float) = 0
         [Toggle()] _GradHorizontal("Use Horizontal Gradient?", float) = 0
@@ -80,7 +81,7 @@ Shader "Custom/CustomShader"
             half4 _MainTex_ST, _MainTex_TexelSize;
             half _HsvShift, _HsvSaturation, _HsvBright;
 
-            float _UseGradient, _GradHorizontal, _GradVertical, _GradRadiant, _UseReverseGradient;
+            float _UseGradient, _GradHorizontal, _GradVertical, _GradRadiant, _UseReverseGradient, _OverlayAlpha;
             half _GradBlend, _GradValueX, _GradValueY, _GradValueR;
 			half4 _GradTopRightCol, _GradTopLeftCol, _GradBotRightCol, _GradBotLeftCol;
             
@@ -225,9 +226,9 @@ Shader "Custom/CustomShader"
                             lerpY
                         );
                     }
-                    gradientResult = lerp(col, gradientResult, _GradBlend);
+                    gradientResult = lerp(col, gradientResult, gradientResult.a * _GradBlend);
                     col.rgb = gradientResult.rgb * col.a;
-                    col.a *= gradientResult.a;
+                    if (_OverlayAlpha > 0.0) col.a *= gradientResult.a;
                 }
                 
                 //////////////////////////////////////

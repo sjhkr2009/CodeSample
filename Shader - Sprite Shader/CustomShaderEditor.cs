@@ -55,6 +55,7 @@ public class CustomShaderEditor : ShaderGUI {
         MaterialProperty useGradient = FindProperty("_UseGradient", properties);
         materialEditor.ShaderProperty(useGradient, "색상 오버레이 사용");
         if (useGradient.floatValue > 0.0f) {
+            var gradOverlayAlpha = FindProperty("_OverlayAlpha", properties);
             var gradBlend = FindProperty("_GradBlend", properties);
             var gradVertical = FindProperty("_GradVertical", properties);
             var gradHorizontal = FindProperty("_GradHorizontal", properties);
@@ -111,6 +112,7 @@ public class CustomShaderEditor : ShaderGUI {
             
             GUILayout.Space(5);
             materialEditor.ShaderProperty(useReverseGradient, "그라디언트 반전");
+            materialEditor.ShaderProperty(gradOverlayAlpha, "투명도 블렌딩");
         }
         GUILayout.Space(10);
 
